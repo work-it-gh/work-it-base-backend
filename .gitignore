@@ -5,5 +5,5 @@ node_modules
 .env.production
 .env.development
 
-#development build
+#distribution build
 dist
