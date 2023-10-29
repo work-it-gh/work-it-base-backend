@@ -9,10 +9,6 @@ import { IJwtPayload } from "../../types";
 export const register = async (req: Request, res: Response) => {
   const { email, phoneNumber, password } = req.body;
 
-  console.log({ email, phoneNumber, password });
-
-  console.log({ user: req.user });
-
   const existingUsers = await UserModel.find({
     $or: [{ email }, { phoneNumber }],
   });
@@ -27,8 +23,8 @@ export const register = async (req: Request, res: Response) => {
   const hashedPassword = hashSync(password, 10);
 
   const newUser = new UserModel({
-    email,
-    phoneNumber,
+    email: email ? email : "",
+    phoneNumber: phoneNumber ? phoneNumber : "",
     password: hashedPassword,
     accountVerified: false,
   });
@@ -161,167 +157,5 @@ export const deleteAccount = async (req: Request, res: Response) => {
   return res.status(200).send({
     status: "success",
     message: "user deletion successful",
-  });
-};
-
-export const createProfile = async (req: Request, res: Response) => {
-  const { id, email, phoneNumber } = req.user as IJwtPayload;
-
-  const user = await UserModel.findOne({
-    $or: [
-      { _id: id, email },
-      { _id: id, phoneNumber },
-    ],
-  });
-
-  if (!user) {
-    return res.status(404).json({
-      status: "failure",
-      message: "user does not exist",
-    });
-  }
-
-  const {
-    username,
-    firstName,
-    lastName,
-    gender,
-    role,
-    profilePictureUrl,
-    phoneNumber: _phone,
-    email: _email,
-  } = req.body;
-
-  const existingUsername = await UserModel.find({ username });
-  if (existingUsername.length > 0) {
-    return res.status(400).send({
-      status: "failure",
-      message: "username has already been taken",
-    });
-  }
-
-  if (_phone) {
-    const existingPhoneNumber = await UserModel.find({ phoneNumber: _phone });
-    if (existingPhoneNumber.length > 0) {
-      return res.status(400).send({
-        status: "failure",
-        message: "phone number has already been taken",
-      });
-    }
-  }
-
-  if (_email) {
-    const existingEmail = await UserModel.find({ email: _email });
-    if (existingEmail.length > 0) {
-      return res.status(400).send({
-        status: "failure",
-        message: "email has already been taken",
-      });
-    }
-  }
-
-  await UserModel.updateOne(
-    { _id: user.id },
-    {
-      $set: {
-        username,
-        firstName,
-        lastName,
-        gender,
-        role,
-        profilePictureUrl,
-        phoneNumber: _phone,
-        email: _email,
-      },
-    }
-  );
-
-  return res.status(200).send({
-    status: "success",
-    message: "user profile creation successful",
-    user: {
-      username,
-      email: _email ? _email : user.email,
-      phoneNumber: _phone ? _phone : user.phoneNumber,
-      firstName,
-      lastName,
-      gender,
-      profilePictureUrl,
-      role,
-    },
-  });
-};
-
-export const updateProfile = async (req: Request, res: Response) => {
-  const { id, email, phoneNumber } = req.user as IJwtPayload;
-
-  const user = await UserModel.findOne({
-    $or: [
-      { _id: id, email },
-      { _id: id, phoneNumber },
-    ],
-  });
-
-  if (!user) {
-    return res.status(404).json({
-      status: "failure",
-      message: "user does not exist",
-    });
-  }
-
-  const { username, firstName, lastName, gender, role, profilePictureUrl } =
-    req.body;
-
-  await UserModel.updateOne(
-    { _id: user.id },
-    { $set: { username, firstName, lastName, gender, role, profilePictureUrl } }
-  );
-
-  return res.status(200).send({
-    status: "success",
-    message: "user profile creation successful",
-    user: {
-      username,
-      email,
-      phoneNumber,
-      firstName,
-      lastName,
-      gender,
-      profilePictureUrl,
-      role,
-    },
-  });
-};
-
-export const getProfile = async (req: Request, res: Response) => {
-  const { id, email, phoneNumber } = req.user as IJwtPayload;
-
-  const user = await UserModel.findOne({
-    $or: [
-      { _id: id, email },
-      { _id: id, phoneNumber },
-    ],
-  });
-
-  if (!user) {
-    return res.status(404).json({
-      status: "failure",
-      message: "user does not exist",
-    });
-  }
-
-  res.status(200).send({
-    status: "success",
-    message: "user account found",
-    user: {
-      username: user.username,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      gender: user.gender,
-      profilePictureUrl: user.profilePictureUrl,
-      role: user.role,
-    },
   });
 };
