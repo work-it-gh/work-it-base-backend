@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
+
 import { verifyToken } from "../util";
 import { IJwtPayload } from "../../types";
-import { UserModel } from "../models";
+import { UserModel, ProfileModel } from "../models";
 
 export const isAuthenticated = async (
   req: Request,
@@ -67,16 +68,17 @@ export const userIsClient = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { id, email, phoneNumber } = req.user as IJwtPayload;
+  const { id } = req.user as IJwtPayload;
 
-  const user = await UserModel.findOne({
-    $or: [
-      { _id: id, email },
-      { _id: id, phoneNumber },
-    ],
-  });
+  const profile = await ProfileModel.findOne({ userId: id });
+  if (!profile) {
+    return res.status(404).json({
+      status: "failure",
+      message: "user does not have a profile",
+    });
+  }
 
-  if (user?.role !== "client") {
+  if (profile.role !== "client") {
     return res.status(400).json({
       status: "failure",
       message: "action not allowed—user does not fulfill role requirements",
@@ -91,16 +93,17 @@ export const userIsServiceProvider = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { id, email, phoneNumber } = req.user as IJwtPayload;
+  const { id } = req.user as IJwtPayload;
 
-  const user = await UserModel.findOne({
-    $or: [
-      { _id: id, email },
-      { _id: id, phoneNumber },
-    ],
-  });
+  const profile = await ProfileModel.findOne({ userId: id });
+  if (!profile) {
+    return res.status(404).json({
+      status: "failure",
+      message: "user does not have a profile",
+    });
+  }
 
-  if (user?.role === "client") {
+  if (profile.role === "client") {
     return res.status(400).json({
       status: "failure",
       message: "action not allowed—user does not fulfill role requirements",
