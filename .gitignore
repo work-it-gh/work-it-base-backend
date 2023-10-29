@@ -1,0 +1,9 @@
+#npm packages
+node_modules
+
+#environment variables
+.env.production
+.env.development
+
+#development build
+dist
