@@ -15,7 +15,8 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "speakeasy": "^2.0.0",
-    "supertest": "^6.3.3"
+    "supertest": "^6.3.3",
+    "typeorm": "^0.3.17"
   },
   "devDependencies": {
     "@babel/core": "^7.23.2",
