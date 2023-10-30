@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 
-import { verifyToken } from "../util";
-import { IJwtPayload } from "../../types";
-import { UserModel, ProfileModel } from "../models";
+import { verifyToken } from "../util/jwt.util";
 
 export const isAuthenticated = async (
   req: Request,
@@ -13,102 +11,28 @@ export const isAuthenticated = async (
 
   if (!authHeader) {
     return res.status(401).json({
-      status: "failure",
+      status: "FAIL",
       message: "authorization header should be provided",
     });
   }
 
-  const authToken = authHeader.split("Bearer ")[1];
-  if (!authToken) {
+  const token = authHeader.split("Bearer ")[1];
+  if (!token) {
     return res.status(401).json({
-      status: "failure",
-      message: "authentication token should be provided",
+      status: "FAIL",
+      message: "authentication token is required",
     });
   }
 
-  const decodedPayload = verifyToken(authToken);
+  const decoded = verifyToken(token);
 
-  if (decodedPayload instanceof Error) {
-    return res.status(401).json({
-      status: "failure",
-      message: decodedPayload.message,
-    });
-  }
-
-  req.user = decodedPayload;
-  next();
-};
-
-export const accountExists = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { id, email, phoneNumber } = req.user as IJwtPayload;
-
-  const user = await UserModel.findOne({
-    $or: [
-      { _id: id, email },
-      { _id: id, phoneNumber },
-    ],
-  });
-
-  if (!user) {
-    return res.status(404).json({
-      status: "failure",
-      message: "user does not exist",
-    });
-  }
-
-  next();
-};
-
-export const userIsClient = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { id } = req.user as IJwtPayload;
-
-  const profile = await ProfileModel.findOne({ userId: id });
-  if (!profile) {
-    return res.status(404).json({
-      status: "failure",
-      message: "user does not have a profile",
-    });
-  }
-
-  if (profile.role !== "client") {
+  if (decoded instanceof Error) {
     return res.status(400).json({
-      status: "failure",
-      message: "action not allowed—user does not fulfill role requirements",
+      status: "FAIL",
+      message: decoded.message,
     });
   }
 
-  next();
-};
-
-export const userIsServiceProvider = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { id } = req.user as IJwtPayload;
-
-  const profile = await ProfileModel.findOne({ userId: id });
-  if (!profile) {
-    return res.status(404).json({
-      status: "failure",
-      message: "user does not have a profile",
-    });
-  }
-
-  if (profile.role === "client") {
-    return res.status(400).json({
-      status: "failure",
-      message: "action not allowed—user does not fulfill role requirements",
-    });
-  }
-
+  req.user = decoded;
   next();
 };

@@ -1,161 +1,158 @@
 import { Request, Response } from "express";
-import { compareSync, hashSync } from "bcrypt";
-import speakeasy from "speakeasy";
+import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
 
-import { UserModel } from "../models";
-import { generateToken } from "../util";
+import { UserRepositorySingleton } from "../models/repository";
+import { generateToken } from "../util/jwt.util";
 import { IJwtPayload } from "../../types";
 
 export const register = async (req: Request, res: Response) => {
-  const { email, phoneNumber, password } = req.body;
+  const { email, phone, password } = req.body;
 
-  const existingUsers = await UserModel.find({
-    $or: [{ email }, { phoneNumber }],
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  const user = await UserRepositorySingleton.createUser({
+    email: email ? email : "",
+    phone: phone ? phone : "",
+    password: hashedPassword,
+    id: uuidv4(),
+    accountVerified: false,
   });
-  if (existingUsers.length > 0) {
-    console.log({ existingUsers });
-    return res.status(400).json({
-      status: "failure",
+
+  if (!user) {
+    return res.status(403).json({
+      status: "FAIL",
       message: "user already exists",
     });
   }
 
-  const hashedPassword = hashSync(password, 10);
-
-  const newUser = new UserModel({
-    email: email ? email : "",
-    phoneNumber: phoneNumber ? phoneNumber : "",
-    password: hashedPassword,
-    accountVerified: false,
+  const token = generateToken({
+    id: user.id,
+    email: user.email,
+    phone: user.phone,
   });
 
-  const savedUser = await newUser.save();
-
-  // time-based otp generation
-  // const secret = speakeasy.generateSecret({ length: 20 });
-  // const otpToken = speakeasy.totp({
-  //   secret: secret.base32,
-  //   encoding: "base32",
-  // });
-
-  //TODO: add email verification
-
-  //TODO: add phone number verification
-
   return res.status(200).json({
-    status: "success",
-    message: "new user creation successful",
-    accessToken: generateToken({
-      id: savedUser._id,
-      email: savedUser.email,
-      phoneNumber: savedUser.phoneNumber,
-    }),
+    status: "PASS",
+    message: "new user created",
+    user: {
+      id: user.id,
+      email: user.email,
+      phone: user.phone,
+      accountVerified: user.accountVerified,
+    },
+    accessToken: token,
   });
 };
 
 export const login = async (req: Request, res: Response) => {
-  const { email, phoneNumber, password } = req.body;
+  const { email, phone, password } = req.body;
 
-  const user = await UserModel.findOne({ $or: [{ email }, { phoneNumber }] });
+  const user = await UserRepositorySingleton.findUser(email, phone);
+
   if (!user) {
     return res.status(404).json({
-      status: "failure",
+      status: "FAIL",
       message: "user does not exist",
     });
   }
 
-  if (!compareSync(password, user.password)) {
-    return res.status(403).json({
-      status: "failure",
+  if (!bcrypt.compareSync(password, user.password)) {
+    return res.status(401).json({
+      status: "FAIL",
       message: "incorrect password",
     });
   }
 
+  const token = generateToken({
+    id: user.id,
+    email: user.email,
+    phone: user.phone,
+  });
+
   return res.status(200).json({
-    status: "success",
+    status: "PASS",
     message: "login successful",
-    accessToken: generateToken({
-      id: user._id,
+    user: {
+      id: user.id,
       email: user.email,
-      phoneNumber: user.phoneNumber,
-    }),
+      phone: user.phone,
+      accountVerified: user.accountVerified,
+    },
+    accessToken: token,
   });
 };
 
-// export const passportLogin = async (req: Request, res: Response) => {
-//   if (!req.user) {
-//     return res.status(400).json({
-//       status: "failed",
-//       message: "login failed",
-//     });
-//   }
+export const getAccount = async (req: Request, res: Response) => {
+  const { id } = req.user as IJwtPayload;
 
-//   const { id, email, phoneNumber } = req.user as IJwtPayload;
-
-//   console.log({ id, email, phoneNumber });
-
-//   const accessToken = generateToken({ id, email, phoneNumber });
-
-//   return res.status(200).json({
-//     status: "success",
-//     message: "login with passport successful",
-//     accessToken,
-//   });
-// };
-
-export const changePassword = async (req: Request, res: Response) => {
-  const { id, email, phoneNumber } = req.user as IJwtPayload;
-
-  const { newPassword } = req.body;
-
-  const user = await UserModel.findOne({
-    $or: [
-      { _id: id, email },
-      { _id: id, phoneNumber },
-    ],
-  });
+  const user = await UserRepositorySingleton.findUserById(id);
 
   if (!user) {
     return res.status(404).json({
-      status: "failure",
+      status: "FAIL",
       message: "user does not exist",
     });
   }
 
-  const hashedPassword = hashSync(newPassword, 10);
+  return res.status(200).json({
+    status: "PASS",
+    message: "user account found",
+    user: {
+      id: user.id,
+      email: user.email,
+      phone: user.phone,
+      accountVerified: user.accountVerified,
+    },
+  });
+};
 
-  await UserModel.updateOne(
-    { _id: user._id },
-    { $set: { password: hashedPassword } }
-  );
+export const updateAccount = async (req: Request, res: Response) => {
+  const { id } = req.user as IJwtPayload;
 
-  return res.status(200).send({
-    status: "success",
-    message: "password change successful",
+  const user = await UserRepositorySingleton.findUserById(id);
+
+  if (!user) {
+    return res.status(404).json({
+      status: "FAIL",
+      message: "user does not exist",
+    });
+  }
+
+  const { email, phone, password } = req.body;
+
+  user.email = email ? email : user.email;
+  user.phone = phone ? phone : user.phone;
+  user.password = password ? bcrypt.hashSync(password, 10) : user.password;
+
+  const _user = await UserRepositorySingleton.save(user);
+
+  return res.status(200).json({
+    status: "PASS",
+    message: "user account updated",
+    user: {
+      id: _user.id,
+      email: _user.email,
+      phone: _user.phone,
+      accountVerified: _user.accountVerified,
+    },
   });
 };
 
 export const deleteAccount = async (req: Request, res: Response) => {
-  const { id, email, phoneNumber } = req.user as IJwtPayload;
+  const { id } = req.user as IJwtPayload;
 
-  const user = await UserModel.findOne({
-    $or: [
-      { _id: id, email },
-      { _id: id, phoneNumber },
-    ],
-  });
+  const result = await UserRepositorySingleton.deleteUserById(id);
 
-  if (!user) {
+  if (!result) {
     return res.status(404).json({
-      status: "failure",
+      status: "FAIL",
       message: "user does not exist",
     });
   }
 
-  await UserModel.deleteOne({ _id: user._id });
-
-  return res.status(200).send({
-    status: "success",
-    message: "user deletion successful",
+  return res.status(200).json({
+    status: "PASS",
+    message: "user account deleted",
   });
 };

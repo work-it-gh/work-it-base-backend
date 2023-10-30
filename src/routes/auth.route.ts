@@ -1,10 +1,11 @@
 import { Router } from "express";
 import {
-  changePassword,
   deleteAccount,
+  getAccount,
   login,
   register,
-} from "../controllers/auth.controller";
+  updateAccount,
+} from "../controllers";
 import { isAuthenticated } from "../middleware";
 
 export const AuthRouter = Router();
@@ -13,18 +14,8 @@ AuthRouter.post("/auth/register", register);
 
 AuthRouter.post("/auth/login", login);
 
-// AuthRouter.post(
-//   "/auth/passport/login",
-//   passport.authenticate("local", { session: false }),
-//   passportLogin
-// );
+AuthRouter.get("/auth/user", isAuthenticated, getAccount);
 
-// AuthRouter.get(
-//   "/auth/changePassword",
-//   passport.authenticate("jwt", { session: false }),
-//   changePassword
-// );
+AuthRouter.put("/auth/user", isAuthenticated, updateAccount);
 
-AuthRouter.post("/auth/changePassword", isAuthenticated, changePassword);
-
-AuthRouter.delete("/auth/delete", isAuthenticated, deleteAccount);
+AuthRouter.delete("/auth/user", isAuthenticated, deleteAccount);

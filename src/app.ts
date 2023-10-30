@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import morgan from "morgan";
 
-import { AuthRouter, ProfileRouter, ServiceRouter } from "./routes";
+import { AuthRouter } from "./routes";
 import { isAuthenticated } from "./middleware";
 
 export const createExpressApp = () => {
@@ -20,8 +20,8 @@ export const createExpressApp = () => {
 
   const BASE_API_PATH = "/api/v1";
   app.use(BASE_API_PATH, AuthRouter);
-  app.use(BASE_API_PATH, isAuthenticated, ProfileRouter);
-  app.use(BASE_API_PATH, isAuthenticated, ServiceRouter);
+  // app.use(BASE_API_PATH, isAuthenticated, ProfileRouter);
+  // app.use(BASE_API_PATH, isAuthenticated, ServiceRouter);
 
   return app;
 };

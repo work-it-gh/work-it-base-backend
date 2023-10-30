@@ -11,7 +11,7 @@ configureEnv();
 
 import http from "http";
 
-import { connectDb } from "./models";
+import { connectDb } from "./models/connection";
 
 import { config } from "./config";
 import { createExpressApp } from "./app";
@@ -19,7 +19,7 @@ import { createExpressApp } from "./app";
 const app = createExpressApp();
 const server = http.createServer(app);
 
-const port = parseInt(config.PORT, 10);
+const port = config.PORT;
 
 connectDb()
   .then((_) => {
