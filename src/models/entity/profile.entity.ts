@@ -1,47 +1,41 @@
-import {
-  Entity,
-  BaseEntity,
-  PrimaryColumn,
-  Column,
-  JoinColumn,
-  OneToOne,
-} from "typeorm";
-import { User } from "./user.entity";
+import { Entity, BaseEntity, PrimaryColumn, Column } from "typeorm";
 
-@Entity({ name: "profile" })
+@Entity({ name: "Profiles" })
 export class Profile extends BaseEntity {
-  @PrimaryColumn({ type: "uuid" })
+  @PrimaryColumn({ type: "uuid", name: "ProfileID" })
   id!: string;
 
-  @Column({ type: "varchar", length: 64, unique: true })
+  @Column({ type: "varchar", length: 64, unique: true, name: "Username" })
   username!: string;
 
-  @Column({ type: "varchar", length: 64 })
+  @Column({ type: "varchar", length: 64, name: "Firstname" })
   firstname!: string;
 
-  @Column({ type: "varchar", length: 64 })
+  @Column({ type: "varchar", length: 64, name: "Lastname" })
   lastname!: string;
 
-  @Column({ type: "int" })
+  @Column({ type: "int", name: "Age" })
   age!: number;
 
-  @Column({ type: "varchar", enum: ["male", "female"], length: "6" })
+  @Column({
+    type: "varchar",
+    enum: ["male", "female"],
+    length: "6",
+    name: "Gender",
+  })
   gender!: string;
 
-  @Column({ type: "int" })
+  @Column({ type: "int", name: "AverageRating" })
   averageRating!: number;
 
   @Column({
     type: "varchar",
     length: 15,
     enum: ["client", "cleaner", "electrician", "worker"],
+    name: "Role",
   })
   role!: string;
 
-  @Column({ type: "text" })
+  @Column({ type: "text", name: "ProfilePicture" })
   profilePicture!: string;
-
-  @OneToOne(() => User)
-  @JoinColumn()
-  user!: User;
 }

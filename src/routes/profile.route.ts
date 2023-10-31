@@ -1,15 +1,19 @@
-// import { Router } from "express";
+import { Router } from "express";
 
-// import {
-//   createProfile,
-//   updateProfile,
-//   getProfile,
-// } from "../controllers/profile.controller";
+import { isAuthenticated } from "../middleware";
+import {
+  createProfile,
+  getProfile,
+  deleteProfile,
+  updateProfile,
+} from "../controllers";
 
-// export const ProfileRouter = Router();
+export const ProfileRouter = Router();
 
-// ProfileRouter.post("/auth/profile", createProfile);
+ProfileRouter.post("/user/profile", isAuthenticated, createProfile);
 
-// ProfileRouter.put("/auth/profile", updateProfile);
+ProfileRouter.get("/user/profile", isAuthenticated, getProfile);
 
-// ProfileRouter.get("/auth/profile", getProfile);
+ProfileRouter.put("/user/profile", isAuthenticated, updateProfile);
+
+ProfileRouter.delete("/user/profile", isAuthenticated, deleteProfile);

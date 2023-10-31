@@ -1,199 +1,170 @@
-// import { Request, Response } from "express";
+import { Request, Response } from "express";
+import { v4 as uuidv4 } from "uuid";
 
-// import { ProfileModel, UserModel } from "../models";
-// import { IJwtPayload } from "../../types";
+import { IJwtPayload } from "../../types";
+import { AppDataSource } from "../models/connection";
+import { Profile, User } from "../models/entity";
 
-// export const createProfile = async (req: Request, res: Response) => {
-//   const { id, email, phoneNumber } = req.user as IJwtPayload;
+const UserRepository = AppDataSource.getRepository(User);
+const ProfileRepository = AppDataSource.getRepository(Profile);
 
-//   const user = await UserModel.findOne({
-//     $or: [
-//       { _id: id, email },
-//       { _id: id, phoneNumber },
-//     ],
-//   });
+export const createProfile = async (req: Request, res: Response) => {
+  const { id } = req.user as IJwtPayload;
 
-//   if (!user) {
-//     return res.status(404).json({
-//       status: "failure",
-//       message: "user does not exist",
-//     });
-//   }
+  const user = await UserRepository.findOne({ where: { id } });
+  if (!user) {
+    return res.status(401).json({
+      status: "FAIL",
+      message: "user authentication failed",
+    });
+  }
 
-//   const {
-//     username,
-//     firstName,
-//     lastName,
-//     gender,
-//     role,
-//     profilePictureUrl,
-//     age,
-//   } = req.body;
+  const { username, lastname, firstname, age, gender, profilePicture, role } =
+    req.body;
 
-//   const existingUsername = await ProfileModel.find({ username });
-//   if (existingUsername.length > 0) {
-//     return res.status(400).send({
-//       status: "failure",
-//       message: "username has already been taken",
-//     });
-//   }
+  const usernameExists = await ProfileRepository.exist({ where: { username } });
+  if (usernameExists) {
+    return res.status(400).json({
+      status: "FAIL",
+      message: "username has been taken",
+    });
+  }
 
-//   const profile = new ProfileModel({
-//     username,
-//     firstName,
-//     lastName,
-//     gender,
-//     role,
-//     profilePictureUrl,
-//     userId: id,
-//     age,
-//     averageRating: 0,
-//   });
+  const profile = ProfileRepository.create({
+    id: uuidv4(),
+    username,
+    lastname,
+    firstname,
+    age,
+    gender,
+    profilePicture,
+    role,
+    averageRating: 0,
+  });
 
-//   const savedProfile = await profile.save();
+  const savedProfile = await ProfileRepository.save(profile);
 
-//   return res.status(200).send({
-//     status: "success",
-//     message: "user profile creation successful",
-//     profile: {
-//       username: savedProfile.username,
-//       firstName: savedProfile.firstName,
-//       lastName: savedProfile.lastName,
-//       gender: savedProfile.gender,
-//       profilePictureUrl: savedProfile.profilePictureUrl,
-//       role: savedProfile.role,
-//     },
-//   });
-// };
+  user.profile = profile;
+  await UserRepository.save(user);
 
-// export const updateProfile = async (req: Request, res: Response) => {
-//   const { id, email, phoneNumber } = req.user as IJwtPayload;
+  return res.status(200).json({
+    status: "PASS",
+    message: "new profile created",
+    profile: {
+      id: savedProfile.id,
+      username: savedProfile.username,
+      firstname: savedProfile.firstname,
+      lastname: savedProfile.lastname,
+      age: savedProfile.age,
+      gender: savedProfile.gender,
+      role: savedProfile.role,
+      averageRating: savedProfile.averageRating,
+      profilePicture: savedProfile.profilePicture,
+    },
+  });
+};
 
-//   const user = await UserModel.findOne({
-//     $or: [
-//       { _id: id, email },
-//       { _id: id, phoneNumber },
-//     ],
-//   });
+export const getProfile = async (req: Request, res: Response) => {
+  const { id } = req.user as IJwtPayload;
 
-//   if (!user) {
-//     return res.status(404).json({
-//       status: "failure",
-//       message: "user does not exist",
-//     });
-//   }
+  const user = await UserRepository.findOne({
+    where: { id },
+    relations: { profile: true },
+  });
+  if (!user) {
+    return res.status(401).json({
+      status: "FAIL",
+      message: "user authentication failed",
+    });
+  }
 
-//   const profile = await ProfileModel.findOne({ userId: user._id });
-//   if (!profile) {
-//     return res.status(404).json({
-//       status: "failure",
-//       message: "user does not have a profile",
-//     });
-//   }
+  console.log({ user });
 
-//   const {
-//     username,
-//     firstName,
-//     lastName,
-//     gender,
-//     role,
-//     profilePictureUrl,
-//     age,
-//     phoneNumber: _phone,
-//     email: _email,
-//   } = req.body;
+  return res.status(200).json({
+    status: "PASS",
+    message: "user profile retrieved",
+    profile: user.profile,
+  });
+};
 
-//   if (_phone) {
-//     const existingPhoneNumber = await UserModel.find({ phoneNumber: _phone });
-//     if (existingPhoneNumber.length > 0) {
-//       return res.status(400).send({
-//         status: "failure",
-//         message: "phone number has already been taken",
-//       });
-//     }
-//   } else {
-//     await UserModel.updateOne({ _id: id }, { $set: { phoneNumber: _phone } });
-//   }
+export const updateProfile = async (req: Request, res: Response) => {
+  const { id } = req.user as IJwtPayload;
 
-//   if (_email) {
-//     const existingEmail = await UserModel.find({ email: _email });
-//     if (existingEmail.length > 0) {
-//       return res.status(400).send({
-//         status: "failure",
-//         message: "email has already been taken",
-//       });
-//     }
-//   } else {
-//     await UserModel.updateOne({ _id: id }, { $set: { email: _email } });
-//   }
+  const user = await UserRepository.findOne({
+    where: { id },
+    relations: { profile: true },
+  });
+  if (!user) {
+    return res.status(401).json({
+      status: "FAIL",
+      message: "user authentication failed",
+    });
+  }
 
-//   await ProfileModel.updateOne(
-//     { _id: profile._id },
-//     {
-//       $set: {
-//         username,
-//         firstName,
-//         lastName,
-//         gender,
-//         role,
-//         profilePictureUrl,
-//         age,
-//       },
-//     }
-//   );
+  const profile = await ProfileRepository.findOne({
+    where: { id: user.profile.id },
+  });
+  if (!profile) {
+    return res.status(404).json({
+      status: "FAIL",
+      message: "user profile does not exist",
+    });
+  }
 
-//   return res.status(200).send({
-//     status: "success",
-//     message: "user profile updated successfully",
-//     user: {
-//       username,
-//       firstName,
-//       lastName,
-//       gender,
-//       profilePictureUrl,
-//       role,
-//       age,
-//       email: _email ? _email : user.email,
-//       phoneNumber: _phone ? _phone : user.phoneNumber,
-//     },
-//   });
-// };
+  const {
+    username,
+    lastname,
+    firstname,
+    age,
+    gender,
+    profilePicture,
+    averageRating,
+  } = req.body;
 
-// export const getProfile = async (req: Request, res: Response) => {
-//   const { id, email, phoneNumber } = req.user as IJwtPayload;
+  const usernameExists = await ProfileRepository.exist({ where: { username } });
+  if (usernameExists) {
+    return res.status(400).json({
+      status: "FAIL",
+      message: "username already taken",
+    });
+  }
 
-//   const user = await UserModel.findOne({
-//     $or: [
-//       { _id: id, email },
-//       { _id: id, phoneNumber },
-//     ],
-//   });
+  profile.username = username ?? profile.username;
+  profile.lastname = lastname ?? profile.lastname;
+  profile.firstname = firstname ?? profile.firstname;
+  profile.age = age ?? profile.age;
+  profile.averageRating = averageRating ?? profile.averageRating;
+  profile.profilePicture = profilePicture ?? profile.profilePicture;
+  profile.gender = gender ?? profile.gender;
 
-//   if (!user) {
-//     return res.status(404).json({
-//       status: "failure",
-//       message: "user does not exist",
-//     });
-//   }
+  const updatedProfile = await ProfileRepository.save(profile);
 
-//   const profile = await ProfileModel.findOne({ userId: user._id });
-//   if (!profile) {
-//     return res.status(404).json({
-//       status: "failure",
-//       message: "user does not have a profile",
-//     });
-//   }
+  return res.status(200).json({
+    status: "PASS",
+    message: "profile updated successfully",
+    profile: updatedProfile,
+  });
+};
 
-//   res.status(200).send({
-//     status: "success",
-//     message: "user account found",
-//     user: {
-//       username: profile.username,
-//       firstName: profile.firstName,
-//       lastName: profile.lastName,
-//       gender: profile.gender,
-//       profilePictureUrl: profile.profilePictureUrl,
-//       role: profile.role,
-//     },
-//   });
-// };
+export const deleteProfile = async (req: Request, res: Response) => {
+  const { id } = req.user as IJwtPayload;
+
+  const user = await UserRepository.findOne({
+    where: { id },
+    relations: { profile: true },
+  });
+  if (!user) {
+    return res.status(401).json({
+      status: "FAIL",
+      message: "user authentication failed",
+    });
+  }
+
+  const userProfileId = user.profile.id;
+  await ProfileRepository.delete({ id: userProfileId });
+
+  return res.status(200).json({
+    status: "PASS",
+    message: "user profile deleted",
+  });
+};

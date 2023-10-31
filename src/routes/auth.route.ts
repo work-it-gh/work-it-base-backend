@@ -1,10 +1,10 @@
 import { Router } from "express";
 import {
-  deleteAccount,
-  getAccount,
+  deleteUser,
+  getUser,
   login,
   register,
-  updateAccount,
+  updateUser,
 } from "../controllers";
 import { isAuthenticated } from "../middleware";
 
@@ -14,8 +14,8 @@ AuthRouter.post("/auth/register", register);
 
 AuthRouter.post("/auth/login", login);
 
-AuthRouter.get("/auth/user", isAuthenticated, getAccount);
+AuthRouter.get("/auth/user", isAuthenticated, getUser);
 
-AuthRouter.put("/auth/user", isAuthenticated, updateAccount);
+AuthRouter.put("/auth/user", isAuthenticated, updateUser);
 
-AuthRouter.delete("/auth/user", isAuthenticated, deleteAccount);
+AuthRouter.delete("/auth/user", isAuthenticated, deleteUser);
