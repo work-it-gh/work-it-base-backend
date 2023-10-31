@@ -1,39 +1,54 @@
 import {
   Entity,
   BaseEntity,
-  PrimaryColumn,
   Column,
-  JoinColumn,
+  PrimaryColumn,
   OneToOne,
+  JoinColumn,
+  ManyToOne,
 } from "typeorm";
 import { User } from "./user.entity";
 
-@Entity({ name: "service" })
+@Entity({ name: "Services" })
 export class Service extends BaseEntity {
-  @PrimaryColumn({ type: "uuid" })
+  @PrimaryColumn({ type: "uuid", name: "ServiceID" })
   id!: string;
 
-  @Column({ type: "varchar", length: 255 })
+  @Column({ type: "varchar", length: "255", name: "Title" })
   title!: string;
 
-  @Column({ type: "varchar", length: 4096 })
+  @Column({ type: "varchar", length: 4096, name: "Description" })
   description!: string;
 
-  @Column({ type: "date" })
-  date!: Date;
+  @Column({ type: "varchar", length: 64, name: "Date" })
+  date!: string;
 
   @Column({
     type: "varchar",
-    enum: ["active", "pending", "completed"],
-    length: 15,
+    length: 16,
+    enum: ["active", "completed", "assigned"],
+    default: "active",
+    name: "Status",
   })
   status!: string;
 
-  @OneToOne(() => User)
-  @JoinColumn()
+  // @Column({ type: "uuid", name: "ClientID", nullable: true })
+  // cliendId!: string;
+
+  // @Column({ type: "uuid", name: "WorkerID", nullable: true })
+  // workerId!: string;
+
+  // @ManyToOne(() => User)
+  // client!: User;
+
+  // @ManyToOne(() => User)
+  // worker!: User;
+
+  @ManyToOne(() => User, (user) => user.clientServices, { onDelete: "CASCADE" })
   client!: User;
 
-  @OneToOne(() => User)
-  @JoinColumn()
-  serviceProvider!: User;
+  @ManyToOne(() => User, (user) => user.workerServices, {
+    onDelete: "SET NULL",
+  })
+  worker!: User;
 }

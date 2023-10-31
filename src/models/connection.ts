@@ -1,5 +1,5 @@
 import { DataSource } from "typeorm";
-import { Profile, User } from "./entity";
+import { Profile, User, Service } from "./entity";
 
 import { config } from "../config";
 
@@ -11,7 +11,7 @@ export const AppDataSource = new DataSource({
   database: config.DATABASE_NAME,
   synchronize: true,
   logging: false,
-  entities: [User, Profile],
+  entities: [User, Profile, Service],
 });
 
 export const connectDb = () => {

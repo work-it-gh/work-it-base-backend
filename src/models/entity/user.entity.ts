@@ -5,8 +5,10 @@ import {
   Column,
   OneToOne,
   JoinColumn,
+  OneToMany,
 } from "typeorm";
 import { Profile } from "./profile.entity";
+import { Service } from "./service.entity";
 
 @Entity({ name: "Users" })
 export class User extends BaseEntity {
@@ -40,4 +42,14 @@ export class User extends BaseEntity {
   @OneToOne(() => Profile, { onDelete: "SET NULL" })
   @JoinColumn({ name: "ProfileID" })
   profile!: Profile;
+
+  @OneToMany(() => Service, (service) => service.client, {
+    onDelete: "SET NULL",
+  })
+  clientServices!: Service[];
+
+  @OneToMany(() => Service, (service) => service.worker, {
+    onDelete: "SET NULL",
+  })
+  workerServices!: Service[];
 }
