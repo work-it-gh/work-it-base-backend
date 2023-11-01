@@ -31,7 +31,7 @@ export class Profile extends BaseEntity {
   @Column({
     type: "varchar",
     length: 15,
-    enum: ["client", "cleaner", "electrician", "worker"],
+    enum: ["client", "cleaner", "electrician", "cobbler", "worker"],
     name: "Role",
   })
   role!: string;

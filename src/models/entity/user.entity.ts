@@ -18,7 +18,6 @@ export class User extends BaseEntity {
   @Column({
     type: "varchar",
     length: 255,
-    unique: true,
     nullable: false,
     name: "Email",
   })
@@ -27,7 +26,6 @@ export class User extends BaseEntity {
   @Column({
     type: "varchar",
     length: 20,
-    unique: true,
     nullable: false,
     name: "Phone",
   })
