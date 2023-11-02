@@ -37,6 +37,14 @@ export class User extends BaseEntity {
   @Column({ type: "boolean", default: false, name: "AccountVerified" })
   accountVerified!: boolean;
 
+  @Column({
+    type: "varchar",
+    length: 15,
+    enum: ["client", "cleaner", "electrician", "cobbler", "worker", "admin"],
+    name: "Role",
+  })
+  role!: string;
+
   @OneToOne(() => Profile, { onDelete: "SET NULL" })
   @JoinColumn({ name: "ProfileID" })
   profile!: Profile;

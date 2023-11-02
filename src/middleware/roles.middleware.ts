@@ -14,9 +14,6 @@ export const userIsClient = async (
 
   const user = await UserRepository.findOne({
     where: { id },
-    relations: {
-      profile: true,
-    },
   });
   if (!user) {
     return res.status(404).json({
@@ -25,7 +22,7 @@ export const userIsClient = async (
     });
   }
 
-  if (user.profile.role !== "client") {
+  if (user.role !== "client") {
     return res.status(400).json({
       status: "FAIL",
       message: "user should be client",
@@ -55,7 +52,7 @@ export const userIsWorker = async (
     });
   }
 
-  if (user.profile.role === "client" || user.profile.role === "admin") {
+  if (user.role === "client" || user.role === "admin") {
     return res.status(403).json({
       status: "FAIL",
       message: "user should not be client",
@@ -84,7 +81,7 @@ export const isAdmin = async (
     });
   }
 
-  if (user.profile.role !== "admin") {
+  if (user.role !== "admin") {
     return res.status(403).json({
       status: "FAIL",
       message: "user is not an admin",

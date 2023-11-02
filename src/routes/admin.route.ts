@@ -4,6 +4,7 @@ import {
   getAllActiveServices,
   getAllAssignedServices,
   getAllCompletedServices,
+  getAllWorkers,
 } from "../controllers";
 import { isAdmin } from "../middleware";
 
@@ -16,3 +17,5 @@ AdminRouter.get("/admin/services/complete", isAdmin, getAllCompletedServices);
 AdminRouter.get("/admin/services/active", isAdmin, getAllActiveServices);
 
 AdminRouter.get("/admin/services/assigned", isAdmin, getAllAssignedServices);
+
+AdminRouter.get("/admin/workers", isAdmin, getAllWorkers);

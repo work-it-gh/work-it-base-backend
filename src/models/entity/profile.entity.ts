@@ -28,14 +28,6 @@ export class Profile extends BaseEntity {
   @Column({ type: "int", name: "AverageRating" })
   averageRating!: number;
 
-  @Column({
-    type: "varchar",
-    length: 15,
-    enum: ["client", "cleaner", "electrician", "cobbler", "worker", "admin"],
-    name: "Role",
-  })
-  role!: string;
-
   @Column({ type: "text", name: "ProfilePicture" })
   profilePicture!: string;
 }

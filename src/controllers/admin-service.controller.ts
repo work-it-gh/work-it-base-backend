@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../models";
 import { Service, User, Profile } from "../models";
 import { IJwtPayload } from "../../types";
-import { Not } from "typeorm";
+import { In, Not } from "typeorm";
 
 const UserRepository = AppDataSource.getRepository(User);
 const ProfileRepository = AppDataSource.getRepository(Profile);
@@ -27,7 +27,7 @@ export const assignServiceToWorker = async (req: Request, res: Response) => {
     });
   }
 
-  if (worker.profile.role === "client" || worker.profile.role === "admin") {
+  if (worker.role === "client" || worker.role === "admin") {
     return res.status(400).json({
       status: "FAIL",
       message: "cannot assign service to non-worker",
@@ -111,5 +111,26 @@ export const getAllAssignedServices = async (req: Request, res: Response) => {
     status: "PASS",
     message: "all assigned services returned",
     services,
+  });
+};
+
+export const getAllWorkers = async (req: Request, res: Response) => {
+  const allWorkers = await UserRepository.find({
+    where: { role: Not(In(["client", "admin"])) },
+  });
+
+  const workers = allWorkers.map((worker) => {
+    return {
+      id: worker.id,
+      email: worker.email,
+      phone: worker.phone,
+      role: worker.role,
+    };
+  });
+
+  return res.status(200).json({
+    status: "PASS",
+    message: "all workers returned",
+    allWorkers: workers,
   });
 };

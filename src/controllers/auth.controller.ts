@@ -10,7 +10,7 @@ import { User } from "../models/entity";
 const UserRepository = AppDataSource.getRepository(User);
 
 export const register = async (req: Request, res: Response) => {
-  const { email, phone, password } = req.body;
+  const { email, phone, password, role } = req.body;
 
   const userExists = await UserRepository.exist({
     where: [{ email }, { phone }],
@@ -27,6 +27,7 @@ export const register = async (req: Request, res: Response) => {
     email: email ? email : "",
     phone: phone ? phone : "",
     password: bcrypt.hashSync(password, 10),
+    role,
     accountVerified: false,
   });
 
@@ -46,6 +47,7 @@ export const register = async (req: Request, res: Response) => {
       email: savedUser.email,
       phone: savedUser.phone,
       accountVerified: savedUser.accountVerified,
+      role: savedUser.role,
     },
     accessToken,
   });
@@ -83,6 +85,7 @@ export const login = async (req: Request, res: Response) => {
       email: user.email,
       phone: user.phone,
       accountVerified: user.accountVerified,
+      role: user.role,
     },
     accessToken,
   });
@@ -107,6 +110,7 @@ export const getUser = async (req: Request, res: Response) => {
       email: user.email,
       phone: user.phone,
       accountVerified: user.accountVerified,
+      role: user.role,
     },
   });
 };
@@ -138,6 +142,7 @@ export const updateUser = async (req: Request, res: Response) => {
       email: updatedUser.email,
       phone: updatedUser.phone,
       accountVerified: updatedUser.accountVerified,
+      role: user.role,
     },
   });
 };

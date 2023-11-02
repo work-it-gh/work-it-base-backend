@@ -38,7 +38,6 @@ export const createProfile = async (req: Request, res: Response) => {
     age,
     gender,
     profilePicture,
-    role,
     averageRating: 0,
   });
 
@@ -57,7 +56,6 @@ export const createProfile = async (req: Request, res: Response) => {
       lastname: savedProfile.lastname,
       age: savedProfile.age,
       gender: savedProfile.gender,
-      role: savedProfile.role,
       averageRating: savedProfile.averageRating,
       profilePicture: savedProfile.profilePicture,
     },
