@@ -32,18 +32,6 @@ export class Service extends BaseEntity {
   })
   status!: string;
 
-  // @Column({ type: "uuid", name: "ClientID", nullable: true })
-  // cliendId!: string;
-
-  // @Column({ type: "uuid", name: "WorkerID", nullable: true })
-  // workerId!: string;
-
-  // @ManyToOne(() => User)
-  // client!: User;
-
-  // @ManyToOne(() => User)
-  // worker!: User;
-
   @ManyToOne(() => User, (user) => user.clientServices, { onDelete: "CASCADE" })
   client!: User;
 
@@ -51,4 +39,7 @@ export class Service extends BaseEntity {
     onDelete: "SET NULL",
   })
   worker!: User;
+
+  @ManyToOne(() => User, (user) => user.id)
+  assignedBy!: User;
 }

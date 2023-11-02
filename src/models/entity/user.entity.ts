@@ -50,4 +50,7 @@ export class User extends BaseEntity {
     onDelete: "SET NULL",
   })
   workerServices!: Service[];
+
+  @OneToMany(() => Service, (service) => service.assignedBy)
+  adminServicesAssigned!: Service[];
 }

@@ -6,15 +6,28 @@ import {
   getAllClientServices,
   updateClientService,
 } from "../controllers";
+import { userIsClient } from "../middleware";
 
 export const ServiceRouter = Router();
 
-ServiceRouter.post("/service/client", createClientService);
+ServiceRouter.post("/client/service", userIsClient, createClientService);
 
-ServiceRouter.get("/service/client", getAllClientServices);
+ServiceRouter.get("/client/service", userIsClient, getAllClientServices);
 
-ServiceRouter.get("/service/client/:serviceId", findServiceWorker);
+ServiceRouter.get(
+  "/client/service/:serviceId",
+  userIsClient,
+  findServiceWorker
+);
 
-ServiceRouter.delete("/service/client/:serviceId", deleteClientService);
+ServiceRouter.delete(
+  "/client/service/:serviceId",
+  userIsClient,
+  deleteClientService
+);
 
-ServiceRouter.put("/service/client/:serviceId", updateClientService);
+ServiceRouter.put(
+  "/client/service/:serviceId",
+  userIsClient,
+  updateClientService
+);

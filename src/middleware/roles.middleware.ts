@@ -55,10 +55,39 @@ export const userIsWorker = async (
     });
   }
 
-  if (user.profile.role === "client") {
-    return res.status(400).json({
+  if (user.profile.role === "client" || user.profile.role === "admin") {
+    return res.status(403).json({
       status: "FAIL",
       message: "user should not be client",
+    });
+  }
+
+  next();
+};
+
+export const isAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.user as IJwtPayload;
+
+  const user = await UserRepository.findOne({
+    where: { id },
+    relations: { profile: true },
+  });
+
+  if (!user) {
+    return res.status(404).json({
+      status: "FAIL",
+      message: "user does not exist",
+    });
+  }
+
+  if (user.profile.role !== "admin") {
+    return res.status(403).json({
+      status: "FAIL",
+      message: "user is not an admin",
     });
   }
 
